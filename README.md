@@ -25,6 +25,7 @@ React Native app for visualizing waste collection routes. Displays pre-geocoded 
 ## Data
 
 Route data is stored in `src/assets/data/` — last full week of March 2026 (Mon 2026-03-23 → Sun 2026-03-29):
+
 - 35 routes across 7 days
 - ~6,400 stops total
 - Addresses in Jelgava, Latvia
@@ -40,6 +41,8 @@ Addresses are pre-geocoded via Mapbox Geocoding API and stored in `src/assets/da
 - React Native environment: https://reactnative.dev/docs/set-up-your-environment
 
 ## Setup
+
+This project uses **Yarn** — do not use `npm install`.
 
 ```bash
 yarn install
@@ -116,10 +119,12 @@ src/
 ## Schedule Code Format
 
 Each stop has a 7-character schedule code where each position represents a day (Mon – Sun):
+
 - digit = service on that day
 - `x` = no service
 
 Examples:
+
 - `xxx4xxx` → Thursday only
 - `xx3xxx7` → Wednesday + Sunday
 - `x2x4xx7` → Tuesday + Thursday + Sunday
