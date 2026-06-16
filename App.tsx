@@ -1,45 +1,36 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
+import { useEffect } from 'react';
 
-import { NewAppScreen } from '@react-native/new-app-screen';
-import { StatusBar, StyleSheet, useColorScheme, View } from 'react-native';
-import {
-  SafeAreaProvider,
-  useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Provider } from 'react-redux';
+import routesIndex from 'src/assets/data/routesIndex.json';
 
-function App() {
-  const isDarkMode = useColorScheme() === 'dark';
+import { setAvailableDates, store } from 'src/store';
 
-  return (
-    <SafeAreaProvider>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <AppContent />
-    </SafeAreaProvider>
-  );
-}
+import { useAppDispatch } from 'src/hooks';
 
-function AppContent() {
-  const safeAreaInsets = useSafeAreaInsets();
+import { Navigation } from 'src/navigation';
 
-  return (
-    <View style={styles.container}>
-      <NewAppScreen
-        templateFileName="App.tsx"
-        safeAreaInsets={safeAreaInsets}
-      />
-    </View>
-  );
-}
+import { styles } from './App.styles';
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
+const AppContent = () => {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    dispatch(setAvailableDates(routesIndex));
+  }, [dispatch]);
+
+  return <Navigation />;
+};
+
+const App = () => (
+  <GestureHandlerRootView style={styles.root}>
+    <Provider store={store}>
+      <SafeAreaProvider>
+        <AppContent />
+      </SafeAreaProvider>
+    </Provider>
+  </GestureHandlerRootView>
+);
 
 export default App;

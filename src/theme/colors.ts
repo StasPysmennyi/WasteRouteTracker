@@ -1,0 +1,18 @@
+export const COLORS = {
+  primary: '#2E7D32',
+  primaryLight: '#4CAF50',
+  secondary: '#1565C0',
+  secondaryLight: '#42A5F5',
+  danger: '#C62828',
+  warning: '#F57F17',
+  background: '#F5F5F5',
+  surface: '#FFFFFF',
+  surfaceLight: '#E8E8E8',
+  textPrimary: '#212121',
+  textSecondary: '#757575',
+  textMuted: '#BDBDBD',
+  white: '#FFFFFF',
+  black: '#000000',
+  border: '#E0E0E0',
+  routeColors: ['#2E7D32', '#1565C0', '#E65100', '#6A1B9A', '#00838F'],
+} as const;

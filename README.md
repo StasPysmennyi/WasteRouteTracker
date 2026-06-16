@@ -1,97 +1,132 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# WasteRouteTracker
 
-# Getting Started
+React Native app for visualizing waste collection routes from Excel data. Geocodes addresses, displays them on a map with route polylines, and shows collection schedule and statistics.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Features
 
-## Step 1: Start Metro
+- Map view with route markers and polylines connecting stops in collection order
+- Week navigation strip — browse routes day by day (Jan 1 – Mar 31, 2026)
+- Schedule decoding: `xxx4xxx` = Thursday only, `xx3xxx7` = Wednesday + Sunday, etc.
+- Frequency display: `1xn` = once a week, `1x2n` = once every 2 weeks
+- Lazy geocoding via OpenStreetMap Nominatim (rate-limited, cached across sessions)
+- Route statistics: stops per day of the week, top addresses, total volume/bins
+- Multiple routes per day — cycle between them with the route toggle button
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Tech Stack
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- React Native 0.85.3 (no Expo)
+- TypeScript
+- Redux Toolkit and redux-persist (geocoding cache persisted to AsyncStorage)
+- axios (Nominatim geocoding API)
+- react-native-maps
+- react-native-svg (Icons)
+- react-native-reanimated + react-native-worklets
+- @react-navigation/bottom-tabs + native-stack
+- Husky + lint-staged + ESLint + Prettier
 
-```sh
-# Using npm
-npm start
+## Data
 
-# OR using Yarn
-yarn start
-```
+Route data is pre-processed from the Excel file into `src/assets/data/routes.json`:
+- Four hundred thirty routes across 90 days (Jan 1 – Mar 31, 2026)
+- 79,552 stops total
+- Addresses are in Jelgava, Latvia
 
-## Step 2: Build and run your app
+Geocoding happens lazily for the currently selected day. Results are cached in AsyncStorage via redux-persist, so addresses are not re-geocoded on later launches.
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+## Requirements
 
-### Android
+- Node >= 22.11.0
+- Yarn 3.x
+- Ruby + Bundler (iOS)
+- Xcode (iOS) / Android Studio (Android)
+- React Native environment set up: https://reactnative.dev/docs/set-up-your-environment
 
-```sh
-# Using npm
-npm run android
+## Setup
 
-# OR using Yarn
-yarn android
+```bash
+yarn install
 ```
 
 ### iOS
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+```bash
+# First clone only — installs the CocoaPods version pinned in ios/Gemfile.lock
+cd ios && bundle install && cd ..
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+# Every time native dependencies change
+cd ios && bundle exec pod install && cd ..
 
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
 yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+> `bundle exec pod install` ensures all team members use the same CocoaPods version (pinned in `ios/Gemfile.lock`), avoiding subtle build differences between machines.
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+### Android
 
-## Step 3: Modify your app
+```bash
+yarn android
+```
 
-Now that you have successfully run the app, let's make changes!
+## Scripts
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+```bash
+yarn start        # start Metro bundler
+yarn ios          # run on iOS simulator
+yarn android      # run on Android emulator
+yarn lint         # ESLint
+yarn prettier     # Prettier format
+yarn ts-check     # TypeScript check
+yarn test         # Jest
+```
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## Project Structure
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+```
+src/
+├── api/           # Nominatim geocoding API
+├── assets/
+│   └── data/
+│       └── routes.json   # pre-processed Excel data
+├── components/
+│   ├── Icons/     # SVG icon components (BinIcon, RouteIcon, StatsIcon, ...)
+│   ├── BinMarker/ # custom map marker
+│   ├── RouteCard/ # route list card
+│   ├── StatsCard/ # stats display card
+│   ├── TabBar/    # custom bottom tab bar
+│   └── WeekStrip/ # day selector strip
+├── constants/     # mapConfig, routeConfig, scheduleConfig, tabBarConfig
+├── hooks/         # useGeocoding, useRoutesByDate, useWeekNavigation, useAppDispatch/Selector
+├── models/
+│   ├── enums/     # DayOfWeek, ScreenNames, TabNames
+│   └── types/     # Route, RouteStop, GeocodedRoute, Coordinate, ...
+├── navigation/    # bottom tab navigator
+├── screens/
+│   ├── MapScreen/     # map with routes, polylines, week strip
+│   ├── RoutesScreen/  # list of routes for selected day
+│   └── StatsScreen/   # statistics and charts
+├── store/
+│   └── slices/
+│       ├── routesSlice.ts    # routes data, selected date/route
+│       └── geocodingSlice.ts # geocoding cache
+├── theme/         # colors, spacing, typography
+└── utils/         # schedule parsing (parseSchedule)
+```
 
-## Congratulations! :tada:
+## Schedule Code Format
 
-You've successfully run and modified your React Native App. :partying_face:
+Each stop has a 7-character schedule code where each position represents a day (Mon – Sun):
+- digit = service on that day
+- `x` = no service
 
-### Now what?
+Examples:
+- `xxx4xxx` → Thursday only
+- `xx3xxx7` → Wednesday + Sunday
+- `x2x4xx7` → Tuesday + Thursday + Sunday
+- `1234567` → every day
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+## Frequency Codes
 
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+- `1xn` — once a week
+- `1x2n` — once every 2 weeks
+- `1x3n` — once every 3 weeks
+- `1xnn` — once a week (variant)
