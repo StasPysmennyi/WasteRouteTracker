@@ -1,37 +1,35 @@
 # WasteRouteTracker
 
-React Native app for visualizing waste collection routes from Excel data. Geocodes addresses, displays them on a map with route polylines, and shows collection schedule and statistics.
+React Native app for visualizing waste collection routes. Displays pre-geocoded stops on a map with route polylines and collection schedule.
 
 ## Features
 
 - Map view with route markers and polylines connecting stops in collection order
-- Week navigation strip — browse routes day by day (Jan 1 – Mar 31, 2026)
+- Week navigation strip — browse routes day by day
 - Schedule decoding: `xxx4xxx` = Thursday only, `xx3xxx7` = Wednesday + Sunday, etc.
 - Frequency display: `1xn` = once a week, `1x2n` = once every 2 weeks
-- Lazy geocoding via OpenStreetMap Nominatim (rate-limited, cached across sessions)
-- Route statistics: stops per day of the week, top addresses, total volume/bins
 - Multiple routes per day — cycle between them with the route toggle button
+- Route statistics: stops, total volume, bins per route
 
 ## Tech Stack
 
-- React Native 0.85.3 (no Expo)
+- React Native 0.85.3 (New Architecture enabled)
 - TypeScript
-- Redux Toolkit and redux-persist (geocoding cache persisted to AsyncStorage)
-- axios (Nominatim geocoding API)
-- react-native-maps
-- react-native-svg (Icons)
+- Redux Toolkit
+- @maplibre/maplibre-react-native
+- react-native-svg (icons)
 - react-native-reanimated + react-native-worklets
 - @react-navigation/bottom-tabs + native-stack
 - Husky + lint-staged + ESLint + Prettier
 
 ## Data
 
-Route data is pre-processed from the Excel file into `src/assets/data/routes.json`:
-- Four hundred thirty routes across 90 days (Jan 1 – Mar 31, 2026)
-- 79,552 stops total
-- Addresses are in Jelgava, Latvia
+Route data is stored in `src/assets/data/` — last full week of March 2026 (Mon 2026-03-23 → Sun 2026-03-29):
+- 35 routes across 7 days
+- ~6,400 stops total
+- Addresses in Jelgava, Latvia
 
-Geocoding happens lazily for the currently selected day. Results are cached in AsyncStorage via redux-persist, so addresses are not re-geocoded on later launches.
+Addresses are pre-geocoded via Mapbox Geocoding API and stored in `src/assets/data/geocodingCache.json` (committed to git). The app loads the cache as Redux initial state — no runtime geocoding, no API calls on startup.
 
 ## Requirements
 
@@ -39,7 +37,7 @@ Geocoding happens lazily for the currently selected day. Results are cached in A
 - Yarn 3.x
 - Ruby + Bundler (iOS)
 - Xcode (iOS) / Android Studio (Android)
-- React Native environment set up: https://reactnative.dev/docs/set-up-your-environment
+- React Native environment: https://reactnative.dev/docs/set-up-your-environment
 
 ## Setup
 
@@ -50,16 +48,10 @@ yarn install
 ### iOS
 
 ```bash
-# First clone only — installs the CocoaPods version pinned in ios/Gemfile.lock
 cd ios && bundle install && cd ..
-
-# Every time native dependencies change
 cd ios && bundle exec pod install && cd ..
-
 yarn ios
 ```
-
-> `bundle exec pod install` ensures all team members use the same CocoaPods version (pinned in `ios/Gemfile.lock`), avoiding subtle build differences between machines.
 
 ### Android
 
@@ -79,23 +71,32 @@ yarn ts-check     # TypeScript check
 yarn test         # Jest
 ```
 
+## Geocoding (one-time, already done)
+
+`scripts/geocodeAddresses.js` geocodes all addresses via Mapbox and writes `src/assets/data/geocodingCache.json`. The output is committed to git — other developers do not need to run this script.
+
+To re-run (e.g. after updating route data), add a `MAPBOX_ACCESS_TOKEN` to `.env` (see `.env.example`) and run:
+
+```bash
+node scripts/geocodeAddresses.js
+```
+
 ## Project Structure
 
 ```
 src/
-├── api/           # Nominatim geocoding API
 ├── assets/
 │   └── data/
-│       └── routes.json   # pre-processed Excel data
+│       ├── routes.json           # route data
+│       └── geocodingCache.json   # pre-geocoded addresses (committed)
 ├── components/
-│   ├── Icons/     # SVG icon components (BinIcon, RouteIcon, StatsIcon, ...)
-│   ├── BinMarker/ # custom map marker
+│   ├── Icons/     # SVG icon components
 │   ├── RouteCard/ # route list card
 │   ├── StatsCard/ # stats display card
 │   ├── TabBar/    # custom bottom tab bar
 │   └── WeekStrip/ # day selector strip
 ├── constants/     # mapConfig, routeConfig, scheduleConfig, tabBarConfig
-├── hooks/         # useGeocoding, useRoutesByDate, useWeekNavigation, useAppDispatch/Selector
+├── hooks/         # useRoutesByDate, useWeekNavigation, useAppDispatch/Selector
 ├── models/
 │   ├── enums/     # DayOfWeek, ScreenNames, TabNames
 │   └── types/     # Route, RouteStop, GeocodedRoute, Coordinate, ...
@@ -107,9 +108,9 @@ src/
 ├── store/
 │   └── slices/
 │       ├── routesSlice.ts    # routes data, selected date/route
-│       └── geocodingSlice.ts # geocoding cache
+│       └── geocodingSlice.ts # pre-geocoded cache as initial state
 ├── theme/         # colors, spacing, typography
-└── utils/         # schedule parsing (parseSchedule)
+└── utils/         # schedule parsing, map helpers
 ```
 
 ## Schedule Code Format
