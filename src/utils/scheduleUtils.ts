@@ -7,13 +7,8 @@ export const parseSchedule = (schedule: string): string[] => {
   return DAYS_ORDER.filter((day, index) => schedule[index] === day);
 };
 
-export const isScheduledOnDay = (
-  schedule: string,
-  dayCode: string,
-): boolean => {
-  const days = parseSchedule(schedule);
-  return days.includes(dayCode);
-};
+export const isScheduledOnDay = (schedule: string, dayCode: string): boolean =>
+  parseSchedule(schedule).includes(dayCode);
 
 export const parseLocalDate = (dateStr: string): Date => {
   const [year, month, day] = dateStr.split('-').map(Number);

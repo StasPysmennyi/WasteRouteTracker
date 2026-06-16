@@ -2,7 +2,6 @@ export const MAP_CONFIG = {
   // [longitude, latitude] — GeoJSON / MapLibre format
   initialCenter: [23.7215, 56.6511] as [number, number],
   initialZoom: 13,
-  // OpenFreeMap — free, no API key, vector tiles with proper fonts
   styleUrl: 'https://tiles.openfreemap.org/styles/liberty',
   zoomStep: 1,
   zoomAnimationDuration: 300,

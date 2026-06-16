@@ -1,7 +1,7 @@
 import type { FeatureCollection, LineString, Point } from 'geojson';
 
-// Stable module-level constants — fixed references prevent MapLibre from
-// re-validating source data on every render for inactive slots.
+import { type TYPES } from 'src/models';
+
 export const EMPTY_LINE_GEOJSON = JSON.stringify({
   type: 'FeatureCollection',
   features: [
@@ -23,8 +23,6 @@ export const EMPTY_POINTS_GEOJSON = JSON.stringify({
   type: 'FeatureCollection',
   features: [],
 });
-
-import { type TYPES } from 'src/models';
 
 export const toGeoJSON = (
   stops: TYPES.GeocodedStop[],
@@ -52,10 +50,6 @@ export const toGeoJSON = (
     })),
 });
 
-// Always returns a FeatureCollection (possibly empty) rather than a
-// nullable Feature, so callers can keep the polyline's GeoJSONSource/Layer
-// permanently mounted instead of conditionally rendering it — toggling a
-// Layer's presence is a known crash source on React Native's New Architecture.
 export const toPolyline = (
   stops: TYPES.GeocodedStop[],
 ): FeatureCollection<LineString> => {
@@ -64,9 +58,6 @@ export const toPolyline = (
     .sort((stopA, stopB) => stopA.order - stopB.order)
     .map(stop => [stop.coordinate!.longitude, stop.coordinate!.latitude]);
 
-  // Consecutive stops at the same building (different tenants) share a
-  // coordinate — repeated points produce zero-length segments that
-  // MapLibre's native line layer logs as invalid geometry and can crash on.
   const coords = sortedCoords.filter(
     (coord, idx) =>
       idx === 0 ||
