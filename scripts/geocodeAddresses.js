@@ -33,7 +33,10 @@ const loadEnv = () =>
 
 // Mirrors src/api/geocodingApi.ts cleanAddressForGeocoding
 const cleanAddress = address =>
-  address.replace(/\([^)]*\)/g, '').split(/[/;]/)[0].trim();
+  address
+    .replace(/\([^)]*\)/g, '')
+    .split(/[/;]/)[0]
+    .trim();
 
 const fetchCoordinate = async (cleaned, token) => {
   const query = encodeURIComponent(`${cleaned}, Jelgava, Latvia`);
@@ -63,9 +66,7 @@ const main = async () => {
   }
 
   const { routes } = JSON.parse(fs.readFileSync(sourcePath, 'utf8'));
-  const rawAddresses = [
-    ...new Set(routes.flatMap(r => r.stops.map(s => s.a))),
-  ];
+  const rawAddresses = [...new Set(routes.flatMap(r => r.stops.map(s => s.a)))];
 
   const cache = fs.existsSync(cachePath)
     ? JSON.parse(fs.readFileSync(cachePath, 'utf8'))
@@ -85,15 +86,8 @@ const main = async () => {
     cleaned => !byClean[cleaned].every(raw => raw in cache),
   );
 
-  console.log(`Total unique addresses : ${rawAddresses.length}`);
-  console.log(`Unique Mapbox queries  : ${Object.keys(byClean).length}`);
-  console.log(`Already cached         : ${rawAddresses.length - pending.reduce((s, c) => s + byClean[c].length, 0)}`);
-  console.log(`API calls needed       : ${pending.length}`);
-  console.log(`Concurrent             : ${CONCURRENT}`);
-  console.log(`Estimated time         : ~${Math.round((pending.length / CONCURRENT) * 0.15 / 60)} min\n`);
-
   if (pending.length === 0) {
-    console.log('Nothing to do — cache is complete.');
+    console.warn('Nothing to do — cache is complete.');
     return;
   }
 
@@ -119,8 +113,6 @@ const main = async () => {
       `\r[${done}/${pending.length}] ${save ? 'saved' : '     '}`,
     );
   }
-
-  console.log('\n\nDone!');
 };
 
 main().catch(err => {
