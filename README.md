@@ -74,6 +74,19 @@ yarn ts-check     # TypeScript check
 yarn test         # Jest
 ```
 
+## E2E Tests (Detox)
+
+Install `applesimutils` once (required by Detox for iOS):
+
+```bash
+brew tap wix/brew && brew install applesimutils
+```
+
+```bash
+yarn e2e:build:ios   # build the app for simulator
+yarn e2e:test:ios    # run e2e tests
+```
+
 ## Geocoding (one-time, already done)
 
 `scripts/geocodeAddresses.js` geocodes all addresses via Mapbox and writes `src/assets/data/geocodingCache.json`. The output is committed to git — other developers do not need to run this script.
